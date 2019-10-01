@@ -1,7 +1,8 @@
 # Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas in SAS
 
 ```sas
-%macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , delta = 3 , rho = 2 / 252 , output_ds = );
+%macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , 
+                          delta = 3 , rho = 2 / 252 , output_ds = );
 
 %let dsenames_std_filter = (shrcd in (10 , 11) and exchcd in (1 , 2 , 3));
 %let dsf_sample_period = (intnx('mon' , mdy(1,1,&yr_beg.) , - &rw_mon. , 'end') 
