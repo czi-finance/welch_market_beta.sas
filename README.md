@@ -1,4 +1,4 @@
-Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas in SAS
+# Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas in SAS
 
 ```sas
 %macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , delta = 3 , rho = 2 / 252 , output_ds = );
