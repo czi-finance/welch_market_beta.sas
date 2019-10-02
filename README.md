@@ -6,9 +6,11 @@ The default version includes all stocks that are
 (1) ordinary common shares, 
 (2) issued by companies incorporated in the U.S., 
 and (3) listed on the NYSE, AMEX, or NASDAQ.
-It calculates market betas for each stock month by month using a 60-month rolling window of daily stock returns.
+It calculates market betas for each stock month by month using daily stock returns with a rolling window of 60 months.
+Daily excess returns are winsorized at (1 ± 3) * market excess return before calculation.
+Older observations are given less weights based on a decay rate of 2/252 per day.
 One can directly run this macro on the SAS Studio at WRDS.
-For example, calling `%welch_market_beta (output_ds = welch_beta);` would calculate market betas for each month in 2018 with default parameter values (that is, winsorize individual stock returns )
+For example, calling `%welch_market_beta (output_ds = welch_beta);` would calculate market betas for each month in 2018, and the output would be stored in `welch_beta`.
 
 
 
