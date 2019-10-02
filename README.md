@@ -1,4 +1,16 @@
-# Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas in SAS
+
+# Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas
+
+This is a SAS macro that calculates market betas for CRSP stocks following [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240). 
+The default version includes all stocks that are 
+(1) ordinary common shares, 
+(2) issued by companies incorporated in the U.S., 
+and (3) listed on the NYSE, AMEX, or NASDAQ.
+It calculates market betas for each stock month by month using a 60-month rolling window of daily stock returns.
+One can directly run this macro on the SAS Studio at WRDS.
+For example, calling `%welch_market_beta (output_ds = welch_beta);` would calculate market betas for each month in 2018 with default parameter values (that is, winsorize individual stock returns )
+
+
 
 ```sas
 %macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , 
@@ -87,6 +99,6 @@ run;
 %end;
 %mend welch_market_beta;
 
-/* %welch_market_beta (output_ds = welch_beta); */
+
 /* %welch_market_beta (yr_beg = 1927 , yr_end = 2018 , rw_mon = 36 , output_ds = welch_beta); */
 ```
