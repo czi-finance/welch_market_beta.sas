@@ -2,30 +2,28 @@
 # Calculating [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240) Market Betas
 
 This is a SAS macro that calculates market betas for CRSP stocks following [Welch (2019)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3371240). 
-The default version includes all stocks that are 
+The default version covers all stocks that are 
 (1) ordinary common shares, 
 (2) issued by companies incorporated in the U.S., 
 and (3) listed on the NYSE, AMEX, or NASDAQ.
 It calculates market betas for each stock month by month using daily stock returns with a rolling window of 60 months.
-Daily excess returns are winsorized at (1 ± 3) * market excess return before calculation.
+Daily excess returns are winsorized at (1 ± 3) * market excess return before entering the calculation.
 Older observations are given less weights based on a decay rate of 2/252 per day.
 One can directly run this macro on the SAS Studio at WRDS.
-For example, calling `%welch_market_beta (output_ds = welch_beta);` would calculate market betas for each month in 2018, and the output would be stored in `welch_beta`.
-
+##### Example usages:
+- calling `%welch_market_beta (output_ds = welch_beta)` would calculate market betas for all stock in each month of 2018, and the output would be stored in `welch_beta`.
+- calling `%welch_market_beta (yr_beg = 1927 , yr_end = 2018 , rw_mon = 36 , output_ds = welch_beta)` would calculate market betas for every month between 1927 and 2018 with a rolling window of 36 months.
+-  calling `%welch_market_beta (delta = 5 , rho = 3 / 252 , output_ds = welch_beta)` would calculate market betas using daily excess returns that are winsorized at (1 ± 5) * market excess return, and with a daily decay rate of 3/252.
 
 
 ```sas
-%macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , 
-                          delta = 3 , rho = 2 / 252 , output_ds = );
+%macro welch_market_beta (yr_beg = 2018 , yr_end = 2018 , rw_mon = 60 , delta = 3 , rho = 2 / 252 , output_ds = );
 
+/* only include stocks that are ordinary common shares issued by companies incorporated in the US and listed on the NYSE, AMEX, or NASDAQ */
 %let dsenames_std_filter = (shrcd in (10 , 11) and exchcd in (1 , 2 , 3));
-%let dsf_sample_period = (intnx('mon' , mdy(1,1,&yr_beg.) , - &rw_mon. , 'end') 
-                          lt date le "31dec&yr_end."d);
+%let dsf_sample_period = (intnx('mon' , mdy(1,1,&yr_beg.) , - &rw_mon. , 'end') lt date le "31dec&yr_end."d);
 
-/* data dsf_short; set crsp.dsf; */
-/* where &dsf_sample_period.; */
-/* keep permno date ret; run; */
-
+/* extract only relevant variables and observations from the Daily Stock File */
 proc sql;
 create table dsf_short as
 select a.permno , b.date , b.ret
@@ -39,12 +37,13 @@ order by a.permno , b.date
 ;
 quit;
 
+/* clear the work directory; make sure the relevant filenames have not been used */
 proc datasets lib = work nolist; 
 delete &output_ds. _dset0 _dset1 _regest0 _regest1;
 run;
 
+/* start looping through every month in the sample period */
 %local mdate yy mm;
-
 %do yy = &yr_beg %to &yr_end;
 %do mm = 1 %to 12;
 /* %do yy = &yr_beg %to &yr_beg; */
@@ -54,10 +53,12 @@ run;
 %let mdate = %sysfunc(intnx(month , &mdate. , 0 , end));
 %put ********** Calculating market betas for %sysfunc(putn(&mdate , date9.)) **********;
 
+/* extract the most recent &rw_mon. months of daily data */
 data _dset0; set dsf_short;
 where 0 le intck('mon' , date , &mdate.) lt &rw_mon.;
 run;
 
+/* add risk-free rate and market excess return; make sure there are at least 250 valid daily observations for a stock to be included */
 proc sql;
 create table _dset1 as
 select a.* , (a.ret - b.rf) as exret , b.mktrf , b.rf
@@ -68,6 +69,8 @@ group by a.permno
 having count(exret) ge 250
 ;
 quit;
+
+/* winsorize and assign weights to daily excess returns following Welch (2019); */
 proc sort; by permno date;
 data _dset1; set _dset1;
 by permno date; 
@@ -80,6 +83,7 @@ if not missing(exret) then
 drop exrlo exrhi n rf;
 run;
 
+/* calculate market betas as the slope coefficients from the WLS estimation of CAPM */
 proc reg data = _dset1 outest = _regest0 edf noprint;
 model exret = mktrf;
 by permno; weight agew;
@@ -92,6 +96,7 @@ set _regest0 (rename = (mktrf = bMkt));
 mdate = &mdate.; format mdate date9.;
 run;
 
+/* add the obtained betas for this month to the final output */
 proc datasets lib = work nolist;
 append base = &output_ds. data = _regest1;
 delete _dset0 _dset1 _regest0 _regest1;
@@ -100,7 +105,4 @@ run;
 %end;
 %end;
 %mend welch_market_beta;
-
-
-/* %welch_market_beta (yr_beg = 1927 , yr_end = 2018 , rw_mon = 36 , output_ds = welch_beta); */
 ```
