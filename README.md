@@ -10,6 +10,8 @@ It calculates market betas for each stock month by month using daily stock retur
 Daily excess returns are winsorized at (1 ± 3) * market excess return before entering the calculation.
 Older observations are given less weights based on a decay rate of 2/252 per day.
 One can directly run this macro on the SAS Studio at WRDS.
+Please submit an issue should you have any questions.
+
 ##### Example usages:
 - calling `%welch_market_beta (output_ds = welch_beta)` would calculate market betas for all stock in each month of 2018, and the output would be stored in `welch_beta`.
 - calling `%welch_market_beta (yr_beg = 1927 , yr_end = 2018 , rw_mon = 36 , output_ds = welch_beta)` would calculate market betas for every month between 1927 and 2018 with a rolling window of 36 months.
