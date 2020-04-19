@@ -7,7 +7,7 @@ The default version covers all stocks that are
 (2) issued by companies incorporated in the U.S., 
 and (3) listed on the NYSE, AMEX, or NASDAQ.
 It calculates market betas for each stock month by month using daily stock returns with a rolling window of 60 months.
-Daily excess returns are winsorized at (1 ± 3) * market excess return before entering the calculation.
+Daily excess returns are winsorized at *(1 ± 3) * market excess return* before entering the calculation.
 Older observations are given less weights based on a decay rate of 2/252 per day.
 One can directly run this macro on the SAS Studio at WRDS.
 Please submit an issue should you have any questions.
